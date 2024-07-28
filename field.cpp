@@ -30,13 +30,13 @@ void cron::Field::parse(const std::string& expression)
 		{
 			std::istringstream range_parser(value_text);
 			lower_bound = -1;
-			range_parser >> std::setfill('-') >> lower_bound;
+			range_parser >> lower_bound;
 			char fill = ' ';
 			range_parser >> fill;
 			if (fill == '-')
 			{
 				upper_bound = -1;
-				range_parser >> std::setfill('-') >> upper_bound;
+				range_parser >> upper_bound;
 			}
 			else
 			{
