@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
+project(cron_project)
 enable_testing()
 
 add_library("cron")

@@ -5,7 +5,7 @@
 #include <ctime>
 #include <string>
 
-#include "field.h"
+#include "field.hpp"
 
 namespace cron
 {
@@ -17,7 +17,7 @@ namespace cron
 		std::time_t next(std::time_t base);
 
 	private:
-		std::array<Field, 5> fields_;
+	    std::array<std::unique_ptr<cron::FieldBase>, 5> fields_;
 	};
 }
 #endif // CRON_H

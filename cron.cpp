@@ -3,17 +3,23 @@
 #include "cron.h"
 
 cron::Cron::Cron(const std::string& expression)
-	: fields_{ Field(0, 59), Field(0, 23),
-		Field(1, 31), Field(1, 12), Field(0, 6) }
-{
-	std::istringstream parser(expression);
-	for (auto& field : fields_)
+    : fields_{
+        std::make_unique<Field<0, 59>>(),
+        std::make_unique<Field<0, 23>>(),
+        std::make_unique<Field<1, 31>>(),
+        std::make_unique<Field<1, 12>>(),
+        std::make_unique<Field<0, 6>>()
+    }
 	{
-		std::string field_text;
-		parser >> field_text;
-		field.parse(field_text);
+		std::istringstream parser(expression);
+		for (auto& field : fields_)
+		{
+			std::string field_text;
+			parser >> field_text;
+			if (!field_text.empty()) {
+				field->parse(field_text);
+			}	}
 	}
-}
 
 cron::Cron::~Cron()
 {
@@ -26,14 +32,14 @@ std::time_t cron::Cron::next(std::time_t base)
 	auto local_time = std::localtime(&base);
 	while (local_time->tm_year < 3000 - 1900)
 	{
-		if (fields_[3].contain(local_time->tm_mon + 1))
+		if (fields_[3]->contain(local_time->tm_mon + 1))
 		{
-			if (fields_[2].contain(local_time->tm_mday) &&
-				fields_[4].contain(local_time->tm_wday))
+			if (fields_[2]->contain(local_time->tm_mday) &&
+				fields_[4]->contain(local_time->tm_wday))
 			{
-				if (fields_[1].contain(local_time->tm_hour))
+				if (fields_[1]->contain(local_time->tm_hour))
 				{
-					if (fields_[0].contain(local_time->tm_min))
+					if (fields_[0]->contain(local_time->tm_min))
 					{
 						break;
 					}
