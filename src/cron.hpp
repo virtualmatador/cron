@@ -32,25 +32,43 @@ private:
 
   void read(std::istream &is) {
     if constexpr (second) {
-      fields_[Field::f_second_] = parse<0, 59>(is, 59);
+      fields_[Field::f_second_] = parse<0, 59, 59>(is);
     }
-    fields_[Field::f_minute_] = parse<0, 59>(is, 59);
-    fields_[Field::f_hour_] = parse<0, 23>(is, 23);
-    fields_[Field::f_day_] = parse<1, 31>(is, 32);
-    fields_[Field::f_month_] = parse<1, 12>(is, 12);
-    fields_[Field::f_weekday_] = parse<0, 6>(is, 6);
+    fields_[Field::f_minute_] = parse<0, 59, 59>(is);
+    fields_[Field::f_hour_] = parse<0, 23, 23>(is);
+    fields_[Field::f_day_] = parse<1, 31, 32>(is);
+    fields_[Field::f_month_] = parse<1, 12, 12>(is);
+    fields_[Field::f_weekday_] = parse<0, 6, 6>(is);
     if constexpr (year) {
-      fields_[Field::f_year_] = parse<1970, 2099>(is, 2099);
+      fields_[Field::f_year_] = parse<1970, 2099, 2099>(is);
     } else {
       fields_[Field::f_year_] = std::ranges::to<std::vector<std::size_t>>(
           std::ranges::iota_view{1970, 2099 + 1});
     }
   }
 
-  void write(std::ostream &os) {}
+  void write(std::ostream &os) const {
+    if (second) {
+      serialize<59>(fields_[f_second_]);
+      os << ' ';
+    }
+    serialize<59>(fields_[f_minute_]);
+    os << ' ';
+    serialize<23>(fields_[f_hour_]);
+    os << ' ';
+    serialize<32 - 1>(fields_[f_day_]);
+    os << ' ';
+    serialize<12>(fields_[f_month_]);
+    os << ' ';
+    serialize<6>(fields_[f_weekday_]);
+    if (year) {
+      os << ' ';
+      serialize<2099>(fields_[f_year_]);
+    }
+  }
 
-  template <std::size_t min, std::size_t max>
-  std::vector<std::size_t> parse(std::istream &is, std::size_t last_value) {
+  template <std::size_t min, std::size_t max, std::size_t last_value>
+  std::vector<std::size_t> parse(std::istream &is) {
     std::set<std::size_t> options;
     enum {
       start,
@@ -208,6 +226,21 @@ private:
       }
     }
     return {options.begin(), options.end()};
+  }
+
+  template <std::size_t index, std::size_t last_value>
+  void serialize(std::ostream &os) const {
+    for (auto it = fields_[index].begin();;) {
+      if (*it > last_value) {
+        os << 'l';
+      } else {
+        os << *it;
+      }
+      if (++it == fields_[index].end()) {
+        break;
+      }
+      os << ',';
+    }
   }
 
   void apply_divisor(std::set<std::size_t> &options, std::size_t left,
